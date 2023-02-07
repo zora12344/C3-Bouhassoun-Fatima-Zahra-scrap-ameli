@@ -30,25 +30,25 @@ soup = BeautifulSoup(page.text, 'html.parser')
 
 print(soup)
 
-doctors = fichier.find_all("div", class_="item-professionnel")
 
-doctor_infos = []
+for res in soup.find_all("div", "item-professionnel"):
+    firstname_and_lastname = res.find("a")
+    if len(firstname_and_lastname) != 2: # on skip les nom prénoms mal formatés
+        continue
+    firstname = firstname_and_lastname.contents[1].title()
+    lastname_tag = firstname_and_lastname.contents[0]
+    if lastname_tag:
+        lastname = lastname_tag.string
+        
+    tel_tag = res.find("div", "tel")
+    if tel_tag:
+        tel = tel_tag.string
+    else: 
+        tel = ""
 
-for doctor in doctors[:50]:
-    name = doctor.find("div", class_="nom_pictos").text.strip()
-    phone = None
-    if(doctor.find("div", class_="tel") is not None):
-        phone = doctor.find("div", class_="tel").text.strip()
+    address_with_tags = res.find("div", "adresse").contents
 
-    address = doctor.find("div", class_="adresse").text.strip()
-    doctor_infos.append({"name": name, "phone": phone, "address": address})
-    print(name)
-    df = pd.DataFrame(doctor_infos)
-    df.to_csv("doctors.csv", index=False)
+    address_without_tags = [address for address in address_with_tags if str(type(address)) != "<class 'bs4.element.Tag'>"]
+    address = " - ".join(address_without_tags)
 
-
-
-
-
-with open("post.html", "w") as file:
-    file.write(str(fichier))
+    print(f"{firstname},{lastname},{tel},{address}")
